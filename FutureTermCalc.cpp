@@ -216,7 +216,7 @@ int main() {
 	std::cout << "\n(far)Future Fair Value from Carry: " << farfv << std::endl;
 
 	// market future vs fair value point spread
-	if ( farfv < near ) {
+	if ( farfv < far ) {
 		std::cout << "\n(far)Future Market Price of " << far << " is " << far - farfv << " points above the Fair Value" << std::endl;
 	} else if ( farfv > far ) {
 		std::cout << "\n(far)Future Market Price of " << far << " is " << far - farfv << " points below the Fair Value" << std::endl;
