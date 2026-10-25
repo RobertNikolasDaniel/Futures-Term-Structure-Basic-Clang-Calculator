@@ -1,59 +1,56 @@
 # Futures Term Structure: Market vs. Fair Value
 
-**A C++ quantitative research project by Robert's Research**
+**An Independent Quantitative Research Project by Robert Nikolas Daniel**
 
-**Author:** Robert Nikolas Daniel  
-**GitHub:** RobertNikolasDaniel  
-**Development Method:** Microsoft PowerShell and Windows Notepad  
-**Code and Debugging:** 100% human-written and human-debugged. No generative AI was used to write or debug the code.
+**Language:** C++  
+**Development Environment:** Windows PowerShell and Notepad  
+**Code Generation and Debugging:** 100% human-written and human-debugged. No generative AI was used.
 
 ---
 
 ## 1. Project Overview
 
-This C++ calculator examines the relationship between market-traded futures prices, underlying spot prices, financing conditions, and theoretical fair value.
+This C++ calculator examines the relationship between futures market prices, underlying spot prices, financing conditions, and theoretical fair value.
 
-The program accepts market prices for an underlying asset and two futures contracts, along with the underlying asset's yield, the time remaining until each contract's delivery, and a monthly term structure of annualized SOFR inputs.
+The program accepts market prices for an underlying asset and two futures contracts, the underlying asset's annualized yield, the time remaining until each contract's delivery, and monthly annualized SOFR inputs.
 
 Using these inputs, the calculator estimates financing carry, calculates theoretical futures values, measures market-traded basis relative to spot, and compares the near and far futures contracts through a calendar spread.
 
 The central research question is:
 
-**How does the observed futures term structure compare with a theoretical term structure derived from the underlying asset's yield and the financing cost implied by the SOFR curve?**
+**How does the observed futures term structure compare with a theoretical term structure derived from the underlying asset's yield and financing costs?**
 
-The objective is to establish a simple, transparent framework for examining futures pricing relative to a carry-based benchmark.
+Rather than treating futures prices as isolated market observations, this project examines how the relationship between asset yield, financing assumptions, and time to delivery influences theoretical pricing.
 
-Rather than treating the observed futures price as an isolated market quote, the program connects it to the underlying asset, financing assumptions, and time to delivery.
+The goal is to provide a transparent framework for comparing observed market prices against a simplified carry-based benchmark.
 
 ## 2. Research Objectives
 
-The calculator is designed to examine three related relationships.
+The calculator examines three primary relationships.
 
-### A. Futures versus Spot
+### A. Futures Versus Spot
 
-The first comparison measures the futures contract's market price relative to the underlying spot price.
+The program calculates the market-traded basis between each futures contract and the underlying spot price.
 
-The program calculates a market-traded basis and compares it with an estimated fair value derived from financing carry.
+It then compares the observed futures price with a theoretical fair value derived from the model's financing assumptions.
 
-This provides a framework for investigating whether the observed futures price is relatively rich or cheap against the model's assumptions.
+This provides a framework for investigating whether a futures contract trades relatively rich or cheap against the model's benchmark.
 
 ### B. Financing Carry and Fair Value
 
-The second comparison estimates the financing differential between the underlying asset's yield and the average SOFR input over the relevant delivery horizon.
+The program estimates the time-adjusted difference between the underlying asset's yield and the average SOFR input.
 
-The resulting carry estimate is used to discount the spot price exponentially, producing a theoretical futures value.
+This funding spread is used to calculate an exponential discount factor, which is applied to the spot price to estimate theoretical futures fair value.
 
-This allows the user to examine how different funding assumptions and delivery horizons affect the model's estimate of fair value.
+The resulting values allow the user to examine how different funding assumptions and delivery horizons affect the model's theoretical pricing.
 
 ### C. Near-versus-Far Calendar Spreads
 
-The third comparison examines the difference between the near and far futures contracts.
+The program compares the observed price difference between near and far futures contracts with the difference between their theoretical fair values.
 
-The program calculates both the observed calendar spread and the difference between the two model-generated fair values.
+This comparison provides a way to investigate whether the market's calendar spread differs from the spread implied by the model's carry assumptions.
 
-Comparing these values provides a way to investigate whether the market's calendar spread differs from the spread implied by the model.
-
-The broader objective is to study the relationship between funding conditions, time to delivery, and the shape of the futures term structure.
+The broader objective is to study the relationship between financing conditions, time to delivery, and the shape of the futures term structure.
 
 ---
 
@@ -61,189 +58,136 @@ The broader objective is to study the relationship between funding conditions, t
 
 ### 3.1 Market-Traded Basis
 
-The calculator measures the percentage difference between a futures price and the underlying spot price.
+The calculator measures the normalized difference between a futures market price and the underlying spot price.
 
-The implemented formula is:
+**Formula:**
 
-\[
-B=\frac{F-S}{S}
-\]
+`Market Basis (bps) = ((Futures Price - Spot Price) / Spot Price) * 10,000`
 
 Where:
 
-- \(B\) = market-traded basis as a decimal.
-- \(F\) = futures market price.
-- \(S\) = underlying spot price.
-
-The program converts this decimal into basis points:
-
-\[
-B_{\text{bps}}=\frac{F-S}{S}\times 10{,}000
-\]
+- **Futures Price:** The observed market price of the futures contract.
+- **Spot Price:** The current market price of the underlying asset.
+- **10,000:** Converts the decimal result into basis points.
 
 A positive basis indicates that the futures price is above spot. A negative basis indicates that the futures price is below spot.
 
-This calculation is performed separately for the near and far futures contracts.
+The calculation is performed independently for the near and far futures contracts.
 
-**Purpose:** To establish a normalized measure of the observed futures-to-spot relationship that can be compared across contracts and market conditions.
+**Purpose:** Establishes a normalized measure of the observed futures-to-spot relationship.
 
 ### 3.2 Funding Spread
 
-The calculator estimates the cumulative financing differential between the underlying asset's annualized yield and the average annualized SOFR input.
+The calculator estimates the time-adjusted difference between the underlying asset's yield and the average SOFR input.
 
-The implemented formula is:
+**Formula:**
 
-\[
-C=(y-r)\times\frac{D}{365}
-\]
+`Funding Spread (bps) = (Asset Yield - Average SOFR) * (Days to Delivery / 365)`
 
 Where:
 
-- \(C\) = time-adjusted funding spread in basis points, assuming the input rates are entered in basis points.
-- \(y\) = underlying asset yield or dividend input.
-- \(r\) = average SOFR input.
-- \(D\) = days remaining until delivery.
+- **Asset Yield:** The annualized yield or dividend input, in basis points.
+- **Average SOFR:** The arithmetic average of the monthly SOFR inputs, in basis points.
+- **Days to Delivery:** The number of days remaining until the futures contract's delivery date.
+- **365:** The day-count denominator used by the model.
 
-The calculation can also be written as:
+This calculation estimates the cumulative yield-minus-financing differential over the specified delivery horizon.
 
-\[
-C=y\frac{D}{365}-r\frac{D}{365}
-\]
+The program calculates the funding spread separately for the near and far futures contracts.
 
-This represents the difference between the simple, time-adjusted asset yield and financing cost over the specified horizon.
-
-The program calculates the funding spread independently for the near and far futures contracts.
-
-**Purpose:** To estimate how the relationship between asset yield and financing cost changes across delivery horizons.
+**Purpose:** Measures how the estimated financing differential changes with the underlying yield, SOFR assumptions, and time to delivery.
 
 ### 3.3 Average SOFR Term Structure
 
-Rather than accepting only one SOFR observation for each futures contract, the program asks the user to enter annualized SOFR inputs for individual months.
+The program collects monthly annualized SOFR inputs and stores them in separate vectors for the near and far futures contracts.
 
-These observations are stored in separate vectors for the near and far delivery horizons.
+For each contract, the arithmetic average is calculated by summing the monthly observations and dividing by the number of observations entered.
 
-For the near contract, the program calculates:
+**Formula:**
 
-\[
-\bar r_{\text{near}}=
-\frac{1}{N_{\text{near}}}
-\sum_{i=1}^{N_{\text{near}}}r_i
-\]
+`Average SOFR = Sum of Monthly SOFR Inputs / Number of Monthly Inputs`
 
-For the far contract:
+The resulting averages are used as the SOFR inputs in the respective funding-spread calculations.
 
-\[
-\bar r_{\text{far}}=
-\frac{1}{N_{\text{far}}}
-\sum_{i=1}^{N_{\text{far}}}r_i
-\]
+This allows the near and far contracts to have different average financing assumptions.
 
-Where:
+**Important modeling assumption:** The program uses an arithmetic average of the entered monthly rates. It does not calculate compounded SOFR or weight observations according to the number of days in each month.
 
-- \(r_i\) = annualized SOFR input for month \(i\).
-- \(N\) = number of monthly observations entered.
-
-The resulting averages become the SOFR inputs used in the funding-spread calculations.
-
-This allows the model to use different average financing assumptions for different delivery horizons.
-
-**Important modeling assumption:** The program uses an arithmetic average of the entered monthly rates. It does not calculate a compounded SOFR path or derive a daily financing curve from actual market observations.
+**Purpose:** Provides a simplified representation of the funding-rate assumptions associated with each delivery horizon.
 
 ### 3.4 Exponential Fair Value
 
-The calculator converts the time-adjusted funding spread from basis points into a decimal:
+The calculator converts the time-adjusted funding spread from basis points into a decimal before applying exponential discounting.
 
-\[
-c=\frac{C}{10{,}000}
-\]
+**Step 1: Convert the funding spread into a decimal.**
 
-It then calculates the exponential discount factor:
+`Funding Spread (Decimal) = Funding Spread (bps) / 10,000`
 
-\[
-DF=e^{-c}
-\]
+**Step 2: Calculate the exponential discount factor.**
 
-The theoretical futures value is calculated as:
+`Discount Factor = exp(-Funding Spread (Decimal))`
 
-\[
-F_{\text{fair}}=S e^{-c}
-\]
+**Step 3: Calculate theoretical futures fair value.**
 
-Where:
+`Fair Value = Spot Price * exp(-Funding Spread (Decimal))`
 
-- \(F_{\text{fair}}\) = model-generated futures fair value.
-- \(S\) = underlying spot price.
-- \(c\) = time-adjusted funding spread expressed as a decimal.
-- \(e\) = the base of the natural logarithm.
+The exponential function is implemented using the C++ standard-library function `std::exp()`.
 
-The program implements this calculation using the C++ exponential function, `std::exp()`.
+The program calculates fair value independently for the near and far futures contracts using their respective funding-spread estimates.
 
-The same calculation is applied to both the near and far contracts using their respective funding-spread estimates.
+**Purpose:** Translates the estimated financing differential into a theoretical price adjustment relative to spot.
 
-**Purpose:** To translate the estimated financing differential into a theoretical price adjustment relative to spot.
+This is a simplified exponential carry approximation, not a complete pricing model for every futures contract or underlying asset.
 
-This exponential relationship provides a continuous discounting approximation. It should not be interpreted as a complete pricing model for every futures contract or underlying asset.
+### 3.5 Market Price Versus Fair Value
 
-### 3.5 Futures Market Price Versus Fair Value
+After calculating theoretical fair value, the program compares it with the observed futures market price.
 
-After calculating theoretical fair value, the program compares it with the observed market price.
+**Formula:**
 
-The point difference is:
+`Price Deviation = Market Futures Price - Fair Value`
 
-\[
-\Delta F=F_{\text{market}}-F_{\text{fair}}
-\]
+Interpretation:
 
-A positive difference means the market price is above the model's fair value.
+- **Positive deviation:** The market price is above the model's fair value.
+- **Negative deviation:** The market price is below the model's fair value.
+- **Zero deviation:** The market price equals the model's fair value.
 
-A negative difference means the market price is below the model's fair value.
+The program reports these comparisons separately for the near and far contracts.
 
-A zero difference means the market price matches the model's estimate.
-
-The program reports these comparisons separately for the near and far futures contracts.
-
-**Purpose:** To identify the direction and magnitude of the deviation between the observed market price and the model-generated benchmark.
+**Purpose:** Measures the difference between observed market pricing and the model's theoretical benchmark.
 
 ### 3.6 Calendar Spread Analysis
 
-The calculator examines the relationship between the far and near futures contracts.
+The calculator compares the market-traded calendar spread with the calendar spread implied by its fair-value calculations.
 
-The observed calendar spread is:
+**Market calendar spread:**
 
-\[
-CS_{\text{market}}=F_{\text{far}}-F_{\text{near}}
-\]
+`Market Calendar Spread = Far Futures Price - Near Futures Price`
 
-The model-generated calendar spread is:
+**Fair-value calendar spread:**
 
-\[
-CS_{\text{fair}}=
-F_{\text{far,fair}}-F_{\text{near,fair}}
-\]
+`Fair-Value Calendar Spread = Far Futures Fair Value - Near Futures Fair Value`
 
-The difference between these two spreads is:
+**Calendar spread deviation:**
 
-\[
-\Delta CS=
-CS_{\text{market}}-CS_{\text{fair}}
-\]
+`Calendar Spread Deviation = Market Calendar Spread - Fair-Value Calendar Spread`
 
-Equivalently:
+Interpretation:
 
-\[
-\Delta CS=
-(F_{\text{far}}-F_{\text{near}})
--
-(F_{\text{far,fair}}-F_{\text{near,fair}})
-\]
+- **Positive deviation:** The market calendar spread is wider than the model's fair-value spread.
+- **Negative deviation:** The market calendar spread is narrower than the model's fair-value spread.
+- **Zero deviation:** The market calendar spread equals the model's fair-value spread.
 
-A positive result indicates that the observed calendar spread is wider than the model-generated spread.
+The program also calculates the difference between the near and far contracts' time-adjusted funding spreads.
 
-A negative result indicates that the observed calendar spread is narrower than the model-generated spread.
+**Funding spread differential:**
 
-A zero result indicates that both spreads are equal.
+`Funding Spread Differential = Far Funding Spread - Near Funding Spread`
 
-**Purpose:** To compare the market's pricing of the relative value between two delivery horizons against a benchmark derived from the program's carry assumptions.
+This provides an additional comparison of the estimated financing differential across delivery horizons.
+
+**Purpose:** Examines whether the relative pricing between two futures delivery horizons differs from the relationship implied by the model's carry assumptions.
 
 This is the central comparative output of the project: the difference between the observed futures term structure and the term structure implied by the model.
 
@@ -251,7 +195,7 @@ This is the central comparative output of the project: the difference between th
 
 ## 4. Program Structure
 
-The project is organized into individual mathematical functions and a main routine responsible for user inputs, calculations, and output.
+The project is organized around three mathematical functions and a main routine responsible for inputs, calculations, and output.
 
 ### `marketbasis()`
 
@@ -263,7 +207,7 @@ Calculates the time-adjusted difference between the underlying asset's yield and
 
 ### `fairvalue()`
 
-Calculates the exponential discount factor using the funding-spread input.
+Calculates the exponential discount factor from the funding-spread input.
 
 ### `main()`
 
@@ -282,31 +226,33 @@ The main routine:
 9. Calculates the observed and theoretical calendar spreads.
 10. Reports the difference between the observed and theoretical calendar spreads.
 
-The program uses C++ standard-library components, including:
+### C++ Standard Libraries
+
+The program uses the following standard-library components:
 
 - `<iostream>` for console input and output.
-- `<cmath>` for mathematical operations, including the exponential function.
+- `<cmath>` for mathematical operations, including exponential calculations.
 - `<vector>` for storing monthly SOFR observations.
 
-The vector-based approach allows the user to supply a variable number of monthly rate observations for each delivery horizon.
+The vector-based approach allows the user to enter a variable number of monthly rate observations for each delivery horizon.
 
 ---
 
 ## 5. Development Philosophy
 
-This project was written manually using **Windows Notepad and PowerShell**.
+This project was written manually using **Windows PowerShell and Windows Notepad**.
 
-No generative AI was used to generate the code or debug it.
+**No generative AI was used to write the code or debug it.**
 
 The implementation, debugging process, and development decisions were carried out manually by the author.
 
-The objective was to build a working quantitative research tool through direct engagement with the programming language, the mathematical relationships, and the development process itself.
-
 PowerShell provided the command-line environment, while Notepad served as the text editor.
 
-This workflow deliberately avoids dependence on AI-generated implementations and AI-assisted debugging.
+This workflow emphasizes direct engagement with the programming language, the mathematical relationships, and the debugging process rather than reliance on AI-generated implementations.
 
-The project represents an effort to connect quantitative financial research with hands-on software development, using a straightforward environment in which the author maintains direct responsibility for the code.
+The author takes direct responsibility for the code and its development.
+
+The objective is to build quantitative research tools through a combination of financial theory, mathematical reasoning, and hands-on programming.
 
 **The emphasis is on understanding the mathematics, implementing it manually, and taking responsibility for the resulting program.**
 
@@ -314,20 +260,45 @@ The project represents an effort to connect quantitative financial research with
 
 ## 6. Scope and Limitations
 
-The calculator is a research prototype, not a production pricing or trading system.
+This project is a quantitative research prototype, not a production pricing or trading system.
 
-Its outputs depend on the inputs supplied by the user and the assumptions embedded in its formulas.
+Its outputs depend on the inputs supplied by the user and the assumptions embedded in the model.
 
-In particular:
+### Rate Units
 
-- **Rate units:** The formulas assume yields and SOFR inputs are entered in basis points. Entering decimal rates or percentage values without conversion will produce incorrect results.
-- **Average financing rates:** Monthly SOFR observations are averaged arithmetically rather than compounded or weighted by the number of days in each observation period.
-- **Day-count convention:** The funding-spread calculation uses a 365-day denominator.
-- **Pricing approximation:** The exponential fair-value calculation is a simplified carry-based benchmark. It does not explicitly model every contractual or market-specific feature of a futures contract.
-- **Asset yield:** The program treats the supplied yield or dividend input as a single annualized rate. It does not independently model the timing of dividend payments or other cash flows.
-- **Futures conventions:** The model does not explicitly account for variation-margin cash flows, daily settlement, delivery options, contract-specific conversion factors, or other instrument-specific pricing mechanics.
-- **Input validation:** The program relies on user-supplied inputs and is not designed to handle every invalid or economically inconsistent input.
-- **Interpretation:** A deviation from model fair value is not, by itself, evidence of a profitable arbitrage opportunity. Market frictions, model assumptions, and instrument-specific characteristics may explain observed differences.
+The formulas assume that the asset yield and SOFR inputs are entered in basis points. Entering decimal rates or percentage values without conversion will produce incorrect results.
+
+### Average Financing Rates
+
+The program calculates an arithmetic average of the monthly SOFR observations.
+
+It does not calculate a compounded SOFR path or weight the observations by the number of days in each period.
+
+### Day-Count Convention
+
+The funding-spread calculation uses a 365-day denominator.
+
+### Simplified Pricing Model
+
+The exponential fair-value calculation is a simplified carry-based approximation.
+
+It does not explicitly model every contractual or market-specific feature of futures pricing, including daily variation-margin cash flows, delivery options, or contract-specific pricing conventions.
+
+### Underlying Asset Yield
+
+The model treats the supplied yield or dividend as a single annualized input.
+
+It does not independently model the timing of dividend payments or other underlying cash flows.
+
+### Input Validation
+
+The program relies on user-supplied inputs and does not validate every possible invalid or economically inconsistent value.
+
+### Interpretation of Results
+
+A deviation from theoretical fair value does not, by itself, establish a profitable arbitrage opportunity.
+
+Observed market prices can differ from a simplified model because of market frictions, liquidity, contract specifications, financing conditions, and assumptions that are not explicitly represented in the calculations.
 
 These limitations define the current scope of the project and provide context for interpreting its outputs.
 
@@ -335,18 +306,19 @@ These limitations define the current scope of the project and provide context fo
 
 ## 7. Intended Applications
 
-The project is intended for quantitative research and educational analysis involving:
+The calculator is intended for quantitative research and educational analysis involving:
 
 - Futures-versus-spot basis.
 - Financing carry and theoretical price relationships.
 - SOFR term-structure assumptions.
 - Near-versus-far futures calendar spreads.
 - Market pricing relative to a simplified fair-value benchmark.
-- The transmission of financing assumptions into futures term structure.
+- The relationship between financing conditions and futures term structure.
+- Comparative analysis of market-observed and model-generated pricing relationships.
 
-It provides a transparent framework for testing how different market prices, yields, funding assumptions, and delivery horizons affect a carry-based valuation.
+The program provides a transparent framework for examining how different market prices, asset yields, funding assumptions, and delivery horizons affect a carry-based valuation.
 
-The calculator is not intended to produce trading recommendations or guarantee a particular market outcome.
+It is not intended to generate trading recommendations or guarantee particular market outcomes.
 
 ---
 
@@ -357,20 +329,26 @@ Independent Quantitative Researcher and Trader
 
 Research interests include fixed-income markets, financing conditions, futures pricing, term structure, and the relationship between funding costs and relative-value opportunities.
 
-GitHub: `RobertNikolasDaniel`
+**GitHub:** RobertNikolasDaniel
 
 ---
 
 ## 9. Summary
 
-This project combines a simplified carry-based pricing framework with a manually developed C++ implementation.
+Futures Term Structure: Market vs. Fair Value is an independently developed C++ quantitative research project examining the relationship between market prices, financing carry, and theoretical futures valuations.
 
-It calculates the observed futures basis, estimates financing carry from an underlying yield and average SOFR inputs, derives theoretical futures values using exponential discounting, and compares the observed near-versus-far calendar spread with the spread implied by those theoretical values.
+The calculator:
 
-The core research objective is straightforward:
+- Measures the market-traded futures-to-spot basis.
+- Estimates time-adjusted financing spreads using asset yield and average SOFR inputs.
+- Calculates theoretical futures fair values using exponential discounting.
+- Compares market prices against theoretical values.
+- Evaluates the observed calendar spread against the model-generated fair-value spread.
+
+The central research objective is straightforward:
 
 **Measure how the market-traded futures term structure differs from a theoretical benchmark derived from financing carry.**
 
-The code was written and debugged manually in PowerShell and Notepad, without generative AI code generation or AI debugging.
+The code was written and debugged manually using PowerShell and Notepad, without generative AI code generation or AI debugging.
 
-The result is an independently developed quantitative research project focused on transparent mathematics, direct implementation, and the analysis of futures pricing relative to funding assumptions.
+The result is an independently developed quantitative research tool focused on transparent mathematics, direct implementation, and the analysis of futures pricing relative to financing assumptions.
